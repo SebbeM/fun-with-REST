@@ -1,50 +1,50 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class Main {
+public class funWithREST {
     public static void main(String[] args) {
         if (args.length < 1) {
             System.out.println("Please provide arguments.");
             return;
         }
-        int artistId = 0;
+        //authorize();
+        String artistId = "";
         try {
-            artistId = Integer.parseInt(args[0]);
+            artistId = args[0];
         } catch (NumberFormatException e) {
             System.out.println("First argument is not a valid integer.");
             return;
         }
-        String artist = getArtist(artistId);
-        System.out.println(artist);
+        System.out.println(getFollowers(artistId));
     }
-    private static String getArtist(int artistId) {
-        String response = "Could not GET artist with ID: " + artistId;
+
+    private static int getFollowers(String artistId) {
+        int followers = -1;
         try {
             URL artistUrl = new URL("https://api.spotify.com/v1/artists/" + artistId);
             HttpURLConnection connection = (HttpURLConnection) artistUrl.openConnection();
             connection.setRequestMethod("GET");
-            connection.setRequestProperty("Authorization:", "Bearer {BQDaEHJvR9yVD4TxPmMPVyV_-60ldN6a7_tp9rsQLcz_TGDMrki-B79pRribgt0LmYYotwAVSXghF4GVcu7ZHguQpls3N33Z1q8-Iu2Tg-BZ-gRC0k107i6CC-kF_NAhWoJXoZ04np0}");
-            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setRequestProperty("Authorization", "Bearer BQC2lKl6jegrbdtTVCFClAUwrDDLnxSO-d8SZMuJjeGpSM_S9IjAsnMsl_k40VX-xub_X7Nc52fG04XSbvk");
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
                 BufferedReader inputReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
-                StringBuffer sb = new StringBuffer();
 
                 while ((inputLine = inputReader.readLine()) != null) {
-                    sb.append(inputLine);
+                    if (inputLine.contains("total")) {
+                        String[] splitLine = inputLine.split(" ");
+                        followers = Integer.parseInt(splitLine[splitLine.length - 1]);
+                    }
                 }
-
                 inputReader.close();
-                response = sb.toString();
             }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return response;
+        return followers;
     }
 }
